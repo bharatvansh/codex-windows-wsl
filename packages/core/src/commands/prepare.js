@@ -39,6 +39,7 @@ export async function prepareCommand(options = {}) {
     },
     dmgPath: context.dmgPath,
     dmgHash: context.dmgHash,
+    downloadInfo: context.downloadInfo,
     metadata: context.metadata,
     paths: context.paths,
     stageResults: results,

@@ -25,11 +25,25 @@ test("parseArgs maps command and common flags", () => {
 });
 
 test("parseArgs supports equals form and boolean flags", () => {
-  const parsed = parseArgs(["run", "--dmg=Codex.dmg", "--json", "--no-launch", "--no-prepare"]);
+  const parsed = parseArgs([
+    "run",
+    "--dmg=Codex.dmg",
+    "--json",
+    "--no-launch",
+    "--no-prepare",
+    "--download-latest",
+    "--download-url",
+    "https://persistent.oaistatic.com/codex-app-prod/Codex.dmg"
+  ]);
 
   assert.equal(parsed.command, "run");
   assert.equal(parsed.options.dmgPath, "Codex.dmg");
   assert.equal(parsed.options.json, true);
   assert.equal(parsed.options.noLaunch, true);
   assert.equal(parsed.options.noPrepare, true);
+  assert.equal(parsed.options.downloadLatest, true);
+  assert.equal(
+    parsed.options.downloadUrl,
+    "https://persistent.oaistatic.com/codex-app-prod/Codex.dmg"
+  );
 });

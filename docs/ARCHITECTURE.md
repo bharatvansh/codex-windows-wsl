@@ -20,6 +20,11 @@
 
 Each stage produces machine-readable outputs in a prepare manifest.
 
+`resolve_dmg_and_paths` now supports three DMG sources:
+- explicit `--dmg <path>`
+- local `./Codex.dmg`
+- auto-download of the latest official OpenAI DMG when local file is missing (unless disabled)
+
 ## Manifests
 
 Manifests are written to `<workdir>/manifests`:

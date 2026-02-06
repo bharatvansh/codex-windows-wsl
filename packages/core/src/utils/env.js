@@ -59,13 +59,31 @@ export async function resolveCodexCliPath(explicitPath, logger) {
 
   const whereCodex = await resolveCommandPath("codex");
   if (whereCodex) {
-    if (whereCodex.toLowerCase().endsWith(".cmd")) {
-      const resolvedFromShim = await resolveCodexFromCmdShim(whereCodex);
-      if (resolvedFromShim) {
-        return resolvedFromShim;
+    // On Windows, `where codex` may return multiple paths:
+    // 1. C:\...\npm\codex (shell script without extension, for WSL)
+    // 2. C:\...\npm\codex.cmd (Windows batch file shim)
+    // We need to prefer the .cmd file to properly resolve the .exe
+
+    // Check for .cmd file first (either returned directly or look for it)
+    let cmdPath = whereCodex;
+    if (!whereCodex.toLowerCase().endsWith(".cmd")) {
+      // The shell script was returned first, try to find the .cmd variant
+      const possibleCmd = whereCodex + ".cmd";
+      if (await exists(possibleCmd)) {
+        cmdPath = possibleCmd;
       }
     }
 
+    if (cmdPath.toLowerCase().endsWith(".cmd")) {
+      const resolvedFromShim = await resolveCodexFromCmdShim(cmdPath);
+      if (resolvedFromShim) {
+        return resolvedFromShim;
+      }
+      // If shim resolution fails, return the .cmd path itself
+      return cmdPath;
+    }
+
+    // Fallback: return whatever was found, but this likely won't work on Windows
     return whereCodex;
   }
 

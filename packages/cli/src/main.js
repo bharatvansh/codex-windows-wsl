@@ -18,15 +18,18 @@ Usage:
 
 Commands:
   doctor                          Run environment compatibility checks
-  prepare --dmg <path>            Extract/patch/prepare native modules
+  prepare [--dmg <path>]          Extract/patch/prepare native modules
   launch [--prepare-manifest <p>] Launch from latest or explicit prepare manifest
-  run --dmg <path>                Run prepare then launch
+  run [--dmg <path>]              Run prepare then launch
   clean [--cache-only]            Remove work artifacts
   report --out <path>             Build support report JSON/ZIP
 
 Common options:
   --workdir <path>                Set work directory (default: ./work)
   --codex-cli <path>              Explicit codex.exe path
+  --download-latest               Force download latest DMG from official OpenAI URL
+  --no-download-latest            Disable auto-download when local DMG is missing
+  --download-url <url>            Override DMG download URL (advanced)
   --reuse                         Reuse previously prepared app/native artifacts
   --log-level <level>             error | warn | info | debug
   --json                          JSON logging mode
@@ -65,7 +68,8 @@ export async function main(argv) {
       ok: result.ok,
       manifestPath: result.manifestPath,
       logPath: result.logPath,
-      appDir: result.context?.paths?.appDir
+      appDir: result.context?.paths?.appDir,
+      downloadInfo: result.context?.downloadInfo || null
     });
     return;
   }

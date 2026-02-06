@@ -3,7 +3,9 @@ const BOOLEAN_FLAGS = new Set([
   "json",
   "no-launch",
   "cache-only",
-  "no-prepare"
+  "no-prepare",
+  "download-latest",
+  "no-download-latest"
 ]);
 
 const FLAG_ALIASES = {
@@ -17,7 +19,10 @@ const FLAG_ALIASES = {
   "cache-only": "cacheOnly",
   "prepare-manifest": "prepareManifest",
   out: "outPath",
-  "no-prepare": "noPrepare"
+  "no-prepare": "noPrepare",
+  "download-latest": "downloadLatest",
+  "no-download-latest": "noDownloadLatest",
+  "download-url": "downloadUrl"
 };
 
 function mapFlagName(flag) {

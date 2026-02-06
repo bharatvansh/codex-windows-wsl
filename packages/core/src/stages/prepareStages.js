@@ -1,5 +1,5 @@
 import path from "node:path";
-import { copyFile, mkdir } from "node:fs/promises";
+import { copyFile } from "node:fs/promises";
 import {
   ensureDir,
   exists,
@@ -12,6 +12,7 @@ import { sha256File } from "../utils/hash.js";
 import { resolveWorkPaths } from "../utils/paths.js";
 import { getWindowsArch } from "../utils/platform.js";
 import { findFirstByName } from "../utils/discovery.js";
+import { downloadLatestDmg } from "../utils/download.js";
 import { getPatchRecipes } from "@codex-win/patches";
 
 async function resolve7ZipPath(context) {
@@ -55,7 +56,11 @@ async function resolve7ZipPath(context) {
   return null;
 }
 
-async function resolveDmgPath(optionDmgPath) {
+async function resolveDmgPath(context, optionDmgPath) {
+  if (context.options.downloadLatest && context.options.noDownloadLatest) {
+    throw new Error("Cannot combine --download-latest and --no-download-latest.");
+  }
+
   if (optionDmgPath) {
     const absolute = path.resolve(optionDmgPath);
     if (await exists(absolute)) {
@@ -64,12 +69,43 @@ async function resolveDmgPath(optionDmgPath) {
     throw new Error(`DMG not found: ${optionDmgPath}`);
   }
 
+  const downloadPath = path.join(path.resolve(context.config.workdir), "downloads", "Codex-latest.dmg");
+  async function tryDownload(mode) {
+    try {
+      const downloaded = await downloadLatestDmg({
+        targetPath: downloadPath,
+        downloadUrl: context.options.downloadUrl,
+        logger: context.logger
+      });
+      context.downloadInfo = {
+        ...downloaded,
+        mode
+      };
+      return downloaded.downloadedPath;
+    } catch (error) {
+      throw new Error(
+        `Failed to download latest DMG (${error.message}). ` +
+          "Use --dmg <path> with a local file or pass --no-download-latest."
+      );
+    }
+  }
+
+  if (context.options.downloadLatest) {
+    await context.logger.info("Downloading latest Codex DMG (requested by flag)");
+    return tryDownload("explicit");
+  }
+
   const defaultDmg = path.resolve(process.cwd(), "Codex.dmg");
   if (await exists(defaultDmg)) {
     return defaultDmg;
   }
 
-  return null;
+  if (context.options.noDownloadLatest) {
+    return null;
+  }
+
+  await context.logger.info("No local DMG found. Downloading latest Codex DMG from OpenAI.");
+  return tryDownload("automatic");
 }
 
 async function extractDmg(context) {
@@ -427,9 +463,11 @@ export function createPrepareStages() {
     {
       name: "resolve_dmg_and_paths",
       async run(context) {
-        const dmgPath = await resolveDmgPath(context.options.dmgPath);
+        const dmgPath = await resolveDmgPath(context, context.options.dmgPath);
         if (!dmgPath) {
-          throw new Error("No DMG found. Pass --dmg <path> or place Codex.dmg in the project root.");
+          throw new Error(
+            "No DMG found. Pass --dmg <path>, use --download-latest, or allow automatic download."
+          );
         }
 
         context.dmgPath = dmgPath;
@@ -456,7 +494,8 @@ export function createPrepareStages() {
             dmgHash: context.dmgHash,
             paths: context.paths,
             sevenZip: context.tools.sevenZip,
-            reuseHit: context.reuseHit
+            reuseHit: context.reuseHit,
+            downloadInfo: context.downloadInfo || null
           }
         };
       }
@@ -571,6 +610,7 @@ export async function createInitialPrepareContext(config, options, logger) {
     dmgHash: null,
     asarPath: null,
     asarUnpackedPath: null,
+    downloadInfo: null,
     reuseHit: false,
     nativeWarnings: []
   };

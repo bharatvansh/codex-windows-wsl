@@ -13,6 +13,24 @@ Install C++ toolchain prerequisites:
 
 Then rerun `codex-win prepare --dmg <path>`.
 
+## DMG auto-download fails
+
+By default, `prepare` and `run` auto-download the latest official DMG if no local `Codex.dmg` is found.
+
+Try one of:
+
+```bash
+codex-win prepare --download-latest
+codex-win prepare --download-url https://persistent.oaistatic.com/codex-app-prod/Codex.dmg
+codex-win prepare --dmg C:\\path\\to\\Codex.dmg
+```
+
+If you want to disable automatic downloading:
+
+```bash
+codex-win run --no-download-latest
+```
+
 ## `codex.exe` not found
 
 Install Codex CLI:

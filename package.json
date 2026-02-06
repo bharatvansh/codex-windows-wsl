@@ -1,5 +1,5 @@
 {
-  "name": "codex-windows-bridge",
+  "name": "codex-for-windows",
   "version": "0.1.0",
   "private": true,
   "description": "A clean-room Windows compatibility launcher for the Codex desktop app assets.",
