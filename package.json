@@ -1,0 +1,19 @@
+{
+  "name": "codex-windows-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A clean-room Windows compatibility launcher for the Codex desktop app assets.",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=18.18"
+  },
+  "scripts": {
+    "start": "node packages/cli/bin/codex-win.js",
+    "doctor": "node packages/cli/bin/codex-win.js doctor",
+    "test": "node --test tests/*.test.js"
+  },
+  "type": "module"
+}

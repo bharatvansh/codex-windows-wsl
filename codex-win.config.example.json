@@ -1,0 +1,14 @@
+{
+  "workdir": "C:/codex-win/work",
+  "codexCliPath": null,
+  "autoInstallTools": "prompt",
+  "nativeBuild": {
+    "strategy": "auto"
+  },
+  "logging": {
+    "level": "info"
+  },
+  "telemetry": {
+    "optIn": false
+  }
+}

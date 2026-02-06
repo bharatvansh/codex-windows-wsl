@@ -1,0 +1,14 @@
+{
+  "name": "codex-win",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "codex-win": "./bin/codex-win.js"
+  },
+  "main": "src/main.js",
+  "dependencies": {
+    "@codex-win/core": "0.1.0",
+    "@codex-win/diagnostics": "0.1.0"
+  }
+}
