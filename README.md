@@ -25,22 +25,50 @@ OpenAI's Codex desktop app is macOS-only. This project enables running it on Win
 
 ## Requirements
 
-- Windows 10/11 (host)
-- Node.js 18+
-- npm + npx
-- Git
-- 7-Zip (`7z` on PATH)
-- Codex CLI: `npm i -g @openai/codex`
-- For `--runtime wsl`: a working WSL distro with Linux dependencies (`node`, `npm`, `npx`, `git`, `7z`, `curl`, `python3`) and WSLg/X display.
+### Host (Windows)
+- **Windows 10/11**
+- **Node.js 18+**
+- **npm + npx** (included with Node)
+- **Git**
+- **7-Zip** (Ensure `7z` is on your `PATH`)
+- **Codex CLI:** `npm i -g @openai/codex`
+
+### WSL Runtime (Required only for `--runtime wsl`)
+- **WSL2** with a distro like Ubuntu.
+- **WSLg** (for GUI support) or a running X Server.
+- **Linux Dependencies:** Inside WSL, run:
+  ```bash
+  sudo apt-get update
+  sudo apt-get install -y nodejs npm git p7zip-full curl python3 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libgtk-3-0 libasound2 libgbm1
+  ```
+- **Codex CLI in WSL:** `npm i -g @openai/codex`
 
 ## Quick start
 
-```bash
-npm install
-node packages/cli/bin/codex-win.js doctor
-node packages/cli/bin/codex-win.js run --reuse
-node packages/cli/bin/codex-win.js run --runtime wsl --wsl-distro Ubuntu
-```
+1. **Clone and Install:**
+   ```bash
+   git clone <repo-url>
+   cd codex-for-windows
+   npm install
+   ```
+
+2. **Run Environment Check:**
+   ```bash
+   # For Native Windows
+   node packages/cli/bin/codex-win.js doctor
+   
+   # For WSL
+   node packages/cli/bin/codex-win.js doctor --runtime wsl --wsl-distro Ubuntu
+   ```
+
+3. **Run the App:**
+   ```bash
+   # Native Windows
+   node packages/cli/bin/codex-win.js run
+   
+   # WSL (Recommends --reuse after first successful prepare)
+   node packages/cli/bin/codex-win.js run --runtime wsl --wsl-distro Ubuntu --reuse
+   ```
 
 If `Codex.dmg` is not present in the working directory, `prepare`/`run` automatically downloads the latest official DMG.
 

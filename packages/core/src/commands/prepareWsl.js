@@ -28,6 +28,9 @@ function makeRuntimeConfig(config, runtimeWorkdir) {
 
 async function runWslStep(name, script, runtime, logger, options = {}) {
   await logger.debug(`WSL step: ${name}`);
+  if (options.label) {
+    await logger.info(options.label);
+  }
   const result = await runWslShell(script, {
     distro: runtime.wsl.distro,
     wslCommand: runtime.wslCommand,
@@ -197,10 +200,12 @@ async function prepareNativeModulesInWsl(context) {
     `if [ ! -f ${shellEscape(paths.nativeBuildDir)}/package.json ]; then (cd ${shellEscape(paths.nativeBuildDir)} && npm init -y >/dev/null); fi`,
     
     // Install dependencies
+    `echo "Installing native module dependencies in WSL..."`,
     `(cd ${shellEscape(paths.nativeBuildDir)} && npm install --no-save ${shellEscape(`better-sqlite3@${betterVersion}`)} ${shellEscape(`node-pty@${ptyVersion}`)} "@electron/rebuild@^3.6.0" prebuild-install ${shellEscape(`electron@${electronVersion}`)} )`,
     
     "set +e",
     // Run rebuild
+    `echo "Rebuilding native modules for Electron ${electronVersion}..."`,
     `(cd ${shellEscape(paths.nativeBuildDir)} && ./node_modules/.bin/electron-rebuild -v ${shellEscape(electronVersion)} -w better-sqlite3,node-pty)`,
     "if [ $? -ne 0 ]; then",
     `  (cd ${shellEscape(paths.nativeBuildDir)}/node_modules/better-sqlite3 && ../prebuild-install/bin.js -r electron -t ${shellEscape(electronVersion)} --tag-prefix=electron-v || true)`,
@@ -430,6 +435,7 @@ export async function prepareWslCommand(options = {}, injected = {}) {
   paths.nativeBuildDir = `${paths.nativeRootDir}/${metadata.electronVersion}-${arch}`;
 
   await prepareNativeModulesInWsl({ runtime, logger, options, paths, metadata, arch });
+  await logger.info("Verifying native modules...");
   await verifyNativeModulesInWsl(paths, arch, runtime, logger);
 
   const context = {

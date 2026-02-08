@@ -86,7 +86,7 @@ async function resolveWslCodexCliPath(runtime, options, logger, homeDir) {
 
   const whichResult = await runWslStep(
     "resolve_codex_cli_path",
-    "command -v codex || true",
+    "command -v codex | grep -v '/mnt/c/' || which codex || true",
     runtime,
     logger
   );
