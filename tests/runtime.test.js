@@ -1,3 +1,4 @@
+import path from "node:path";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -39,7 +40,7 @@ test("resolveRuntimeOptions merges config and cli for wsl runtime", () => {
 
 test("resolveRuntimeWorkdir isolates host workdir for wsl", () => {
   const workdir = resolveRuntimeWorkdir("C:/tmp/work", "wsl");
-  assert.ok(workdir.endsWith("work/wsl"));
+  assert.ok(workdir.endsWith(path.join("work", "wsl")));
 });
 
 test("resolveRuntimeOptions rejects invalid runtime", () => {

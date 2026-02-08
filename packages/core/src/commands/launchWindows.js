@@ -94,7 +94,6 @@ export async function launchWindowsCommand(options = {}, injected = {}) {
 
   const launchArgs = [
     appDir,
-    "--enable-logging",
     `--user-data-dir=${userDataDir}`,
     `--disk-cache-dir=${cacheDir}`
   ];
@@ -102,8 +101,9 @@ export async function launchWindowsCommand(options = {}, injected = {}) {
   const result = await runCommand(electronExe, launchArgs, {
     env,
     logger,
-    inheritStdio: true,
-    shell: false
+    inheritStdio: false,
+    shell: false,
+    stderrLogLevel: "error"
   });
 
   const launchManifest = {

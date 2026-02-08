@@ -184,14 +184,15 @@ export async function launchWslCommand(options = {}, injected = {}) {
     "export NODE_ENV=production",
     `export CODEX_CLI_PATH=${shellEscape(codexCliPath)}`,
     `export PWD=${shellEscape(appDir)}`,
-    `exec ${shellEscape(electronExe)} ${shellEscape(appDir)} --enable-logging --user-data-dir=${shellEscape(userDataDir)} --disk-cache-dir=${shellEscape(cacheDir)}`
+    `exec ${shellEscape(electronExe)} ${shellEscape(appDir)} --user-data-dir=${shellEscape(userDataDir)} --disk-cache-dir=${shellEscape(cacheDir)}`
   ].join("\n");
 
   const launchResult = await runWslShell(launchScript, {
     distro: runtime.wsl.distro,
     wslCommand: runtime.wslCommand,
     logger,
-    inheritStdio: true
+    inheritStdio: false,
+    stderrLogLevel: "error"
   });
 
   const launchManifest = {

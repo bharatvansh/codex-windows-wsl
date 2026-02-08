@@ -304,6 +304,7 @@ export async function prepareWslCommand(options = {}, injected = {}) {
 
   await runWslStep("ensure_workdirs", `mkdir -p ${shellEscape(linuxWorkdir)}`, runtime, logger);
 
+  await logger.info("Verifying DMG integrity (this may take 1-2 minutes)...");
   const hashResult = await runWslStep(
     "hash_dmg",
     `sha256sum ${shellEscape(dmgResolution.dmgPath)}`,
@@ -357,7 +358,7 @@ export async function prepareWslCommand(options = {}, injected = {}) {
     );
 
     // Step 1: Extract DMG
-    await logger.debug("Extracting DMG in WSL");
+    await logger.info("Extracting DMG in WSL (this may take a few minutes)...");
     await runWslShell(
       `cd ${shellEscape(extractedDir)} && /usr/bin/7z x -y -snl -aoa ${shellEscape(dmgResolution.dmgPath)} || [ $? -le 2 ]`,
       { ...runtime, logger }
@@ -413,6 +414,7 @@ export async function prepareWslCommand(options = {}, injected = {}) {
     }
 
     // Step 3: Unpack ASAR
+    await logger.info("Unpacking application resources...");
     await runWslStep(
       "unpack_asar",
       `cd ${shellEscape(appDir)} && npx --yes asar@3.1.0 extract ${shellEscape(electronDir)}/app.asar . && ([ ! -d "${electronDir}/app.asar.unpacked" ] || cp -a "${electronDir}/app.asar.unpacked/." .)`,

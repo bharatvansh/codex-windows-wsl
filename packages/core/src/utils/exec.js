@@ -6,7 +6,8 @@ export function runCommand(command, args = [], options = {}) {
     env,
     logger,
     inheritStdio = false,
-    shell = false
+    shell = false,
+    stderrLogLevel = "debug"
   } = options;
 
   return new Promise((resolve, reject) => {
@@ -30,7 +31,7 @@ export function runCommand(command, args = [], options = {}) {
       child.stderr?.on("data", (chunk) => {
         const text = chunk.toString();
         stderr += text;
-        logger?.debug?.(text.trimEnd());
+        logger?.[stderrLogLevel]?.(text.trimEnd());
       });
     }
 
