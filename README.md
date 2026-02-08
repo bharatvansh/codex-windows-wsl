@@ -48,7 +48,7 @@ OpenAI's Codex desktop app is macOS-only. This project enables running it on Win
 1. **Clone and Install:**
    ```bash
    git clone <repo-url>
-   cd codex-for-windows
+   cd codex-for-windows-wsl
    npm install
    ```
 
