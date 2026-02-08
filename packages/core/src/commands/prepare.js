@@ -1,64 +1,34 @@
-import path from "node:path";
-import { loadConfig } from "../config/loadConfig.js";
-import { createLogger } from "../utils/logger.js";
-import { writeManifest } from "../utils/manifests.js";
-import { createPrepareStages, createInitialPrepareContext } from "../stages/prepareStages.js";
-import { runPipeline } from "../pipeline/pipeline.js";
+import { resolveCommandContext } from "../runtime/commandContext.js";
+import { shouldFallbackToWindows } from "../runtime/fallback.js";
+import { prepareWindowsCommand } from "./prepareWindows.js";
+import { prepareWslCommand } from "./prepareWsl.js";
 
-function makeManifestName(prefix, hash) {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const shortHash = hash.slice(0, 12);
-  return `${prefix}-${timestamp}-${shortHash}.json`;
+function withFallbackHint(error, runtimeOptions) {
+  if (runtimeOptions.runtime !== "wsl") {
+    return error;
+  }
+
+  if (runtimeOptions.runtimeFallback !== "prompt") {
+    return error;
+  }
+
+  if (process.stdin.isTTY && process.stdout.isTTY) {
+    return error;
+  }
+
+  return new Error(`${error.message} Set --runtime-fallback windows to auto-fallback in non-interactive mode.`);
 }
 
-export async function prepareCommand(options = {}) {
-  const config = await loadConfig(options);
-  const logger = await createLogger({
-    level: config.logging.level,
-    json: Boolean(options.json),
-    logDir: path.join(config.workdir, "logs")
-  });
+export async function prepareCommand(options = {}, internal = {}) {
+  const context = internal.context || (await resolveCommandContext(options));
 
-  const context = await createInitialPrepareContext(config, options, logger);
+  if (context.runtimeOptions.runtime === "windows") {
+    return prepareWindowsCommand(options, context);
+  }
 
-  await logger.info("Starting prepare pipeline", {
-    workdir: config.workdir,
-    reuse: Boolean(options.reuse)
-  });
-
-  const stages = createPrepareStages();
-  const results = await runPipeline(stages, context, logger);
-
-  const manifestPayload = {
-    kind: "prepare",
-    generatedAt: new Date().toISOString(),
-    options,
-    config: {
-      workdir: config.workdir,
-      nativeBuildStrategy: config.nativeBuild.strategy
-    },
-    dmgPath: context.dmgPath,
-    dmgHash: context.dmgHash,
-    downloadInfo: context.downloadInfo,
-    metadata: context.metadata,
-    paths: context.paths,
-    stageResults: results,
-    logPath: logger.logPath
-  };
-
-  const manifestName = makeManifestName("prepare", context.dmgHash);
-  const manifestPath = await writeManifest(context.paths.manifestsDir, manifestName, manifestPayload);
-
-  await logger.info("Prepare pipeline completed", {
-    manifestPath,
-    appDir: context.paths.appDir
-  });
-
-  return {
-    ok: true,
-    manifestPath,
-    context,
-    stageResults: results,
-    logPath: logger.logPath
-  };
+  try {
+    return await prepareWslCommand(options, context);
+  } catch (error) {
+    throw withFallbackHint(error, context.runtimeOptions);
+  }
 }

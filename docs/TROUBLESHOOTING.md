@@ -4,6 +4,8 @@
 
 Install 7-Zip and ensure `7z` is on PATH.
 
+For WSL runtime, install Linux `7z` too (`sudo apt install p7zip-full`).
+
 ## Native rebuild failures
 
 Install C++ toolchain prerequisites:
@@ -43,6 +45,32 @@ Or launch with explicit path:
 
 ```bash
 codex-win launch --codex-cli C:\\path\\to\\codex.exe
+```
+
+For WSL runtime, install Linux Codex CLI inside the distro and/or pass:
+
+```bash
+codex-win launch --runtime wsl --wsl-codex-cli /usr/local/bin/codex
+```
+
+## WSL runtime preflight failures
+
+Run:
+
+```bash
+codex-win doctor --runtime wsl --wsl-distro Ubuntu
+```
+
+Common fixes:
+
+- Install Linux dependencies in WSL: `node npm npx git 7z curl python3`.
+- Ensure GUI display exists (`WAYLAND_DISPLAY` or `DISPLAY`) via WSLg/X server.
+- Verify distro name with `wsl -l -q`.
+
+If you want automatic fallback to native Windows runtime:
+
+```bash
+codex-win run --runtime wsl --runtime-fallback windows
 ```
 
 ## Launch exits immediately

@@ -28,6 +28,15 @@ test("parseArgs supports equals form and boolean flags", () => {
   const parsed = parseArgs([
     "run",
     "--dmg=Codex.dmg",
+    "--runtime",
+    "wsl",
+    "--wsl-distro=Ubuntu",
+    "--wsl-workdir",
+    "/home/user/.codex-win/work",
+    "--wsl-codex-cli",
+    "/usr/local/bin/codex",
+    "--runtime-fallback",
+    "windows",
     "--json",
     "--no-launch",
     "--no-prepare",
@@ -38,6 +47,11 @@ test("parseArgs supports equals form and boolean flags", () => {
 
   assert.equal(parsed.command, "run");
   assert.equal(parsed.options.dmgPath, "Codex.dmg");
+  assert.equal(parsed.options.runtime, "wsl");
+  assert.equal(parsed.options.wslDistro, "Ubuntu");
+  assert.equal(parsed.options.wslWorkdir, "/home/user/.codex-win/work");
+  assert.equal(parsed.options.wslCodexCliPath, "/usr/local/bin/codex");
+  assert.equal(parsed.options.runtimeFallback, "windows");
   assert.equal(parsed.options.json, true);
   assert.equal(parsed.options.noLaunch, true);
   assert.equal(parsed.options.noPrepare, true);

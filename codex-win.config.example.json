@@ -1,6 +1,13 @@
 {
   "workdir": "C:/codex-win/work",
   "codexCliPath": null,
+  "runtime": "windows",
+  "wsl": {
+    "distro": "Ubuntu",
+    "workdir": "~/.codex-win/work",
+    "codexCliPath": null,
+    "runtimeFallback": "prompt"
+  },
   "autoInstallTools": "prompt",
   "nativeBuild": {
     "strategy": "auto"

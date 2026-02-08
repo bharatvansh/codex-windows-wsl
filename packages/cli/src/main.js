@@ -27,6 +27,11 @@ Commands:
 Common options:
   --workdir <path>                Set work directory (default: ./work)
   --codex-cli <path>              Explicit codex.exe path
+  --runtime <windows|wsl>         Choose runtime environment (default: windows)
+  --wsl-distro <name>             WSL distro name (default: system default distro)
+  --wsl-workdir <path>            Linux workdir for WSL runtime (default: ~/.codex-win/work)
+  --wsl-codex-cli <path>          Explicit codex CLI path inside WSL
+  --runtime-fallback <mode>       prompt | windows | none (WSL failures only)
   --download-latest               Force download latest DMG from official OpenAI URL
   --no-download-latest            Disable auto-download when local DMG is missing
   --download-url <url>            Override DMG download URL (advanced)
@@ -44,6 +49,22 @@ function printResult(result) {
   console.log(JSON.stringify(result, null, 2));
 }
 
+function resolveRuntimeManifestsWorkdir(config, options = {}) {
+  const runtime = String(options.runtime || config.runtime || "windows").toLowerCase();
+  if (runtime === "wsl") {
+    return path.join(config.workdir, "wsl");
+  }
+
+  return config.workdir;
+}
+
+function buildDoctorOptions(config, options = {}) {
+  return {
+    runtime: options.runtime || config.runtime,
+    wslDistro: options.wslDistro || config.wsl?.distro
+  };
+}
+
 export async function main(argv) {
   const parsed = parseArgs(argv);
   const { command, options } = parsed;
@@ -54,7 +75,8 @@ export async function main(argv) {
   }
 
   if (command === "doctor") {
-    const report = await runDoctorChecks();
+    const config = await loadConfig(options);
+    const report = await runDoctorChecks(buildDoctorOptions(config, options));
     printResult(report);
     if (!report.ok) {
       process.exitCode = 1;
@@ -66,10 +88,12 @@ export async function main(argv) {
     const result = await prepareCommand(options);
     printResult({
       ok: result.ok,
+      runtime: result.runtime || options.runtime || "windows",
       manifestPath: result.manifestPath,
       logPath: result.logPath,
       appDir: result.context?.paths?.appDir,
-      downloadInfo: result.context?.downloadInfo || null
+      downloadInfo: result.context?.downloadInfo || null,
+      runtimeContext: result.context?.runtimeContext || null
     });
     return;
   }
@@ -104,8 +128,8 @@ export async function main(argv) {
     }
 
     const config = await loadConfig(options);
-    const doctor = await runDoctorChecks();
-    const manifestsDir = path.join(config.workdir, "manifests");
+    const doctor = await runDoctorChecks(buildDoctorOptions(config, options));
+    const manifestsDir = path.join(resolveRuntimeManifestsWorkdir(config, options), "manifests");
 
     const prepare = await readLatestManifest(manifestsDir, "prepare-");
     const launch = await readLatestManifest(manifestsDir, "launch-");

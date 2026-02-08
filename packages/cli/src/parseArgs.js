@@ -22,7 +22,12 @@ const FLAG_ALIASES = {
   "no-prepare": "noPrepare",
   "download-latest": "downloadLatest",
   "no-download-latest": "noDownloadLatest",
-  "download-url": "downloadUrl"
+  "download-url": "downloadUrl",
+  runtime: "runtime",
+  "wsl-distro": "wslDistro",
+  "wsl-workdir": "wslWorkdir",
+  "wsl-codex-cli": "wslCodexCliPath",
+  "runtime-fallback": "runtimeFallback"
 };
 
 function mapFlagName(flag) {

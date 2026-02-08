@@ -7,6 +7,14 @@
 - `packages/patches`: versioned patch recipes with apply/verify hooks.
 - `packages/diagnostics`: environment checks and support report generation.
 
+## Runtime model
+
+- `windows` runtime uses Windows Electron + Windows Codex CLI.
+- `wsl` runtime uses Linux Electron inside WSL + Linux Codex CLI and Linux `~/.codex` state.
+- Runtime routing lives in `packages/core/src/commands/{prepare,launch,clean}.js`.
+- Runtime resolution and WSL utilities live in `packages/core/src/runtime/*`.
+- Host-side manifests/logs are isolated by runtime workdir (`<workdir>` for windows, `<workdir>/wsl` for wsl).
+
 ## Prepare pipeline stages
 
 1. `resolve_dmg_and_paths`
@@ -31,6 +39,7 @@ Manifests are written to `<workdir>/manifests`:
 
 - `prepare-*.json`: metadata, stage results, resolved paths.
 - `launch-*.json`: launch runtime details and exit code.
+- Each manifest includes `runtime` and (for WSL) `runtimeContext`.
 
 ## Cache model
 
