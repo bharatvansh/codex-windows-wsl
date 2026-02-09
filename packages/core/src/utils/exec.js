@@ -7,7 +7,8 @@ export function runCommand(command, args = [], options = {}) {
     logger,
     inheritStdio = false,
     shell = false,
-    stderrLogLevel = "debug"
+    stderrLogLevel = "debug",
+    stderrFilter = null
   } = options;
 
   return new Promise((resolve, reject) => {
@@ -31,7 +32,11 @@ export function runCommand(command, args = [], options = {}) {
       child.stderr?.on("data", (chunk) => {
         const text = chunk.toString();
         stderr += text;
-        logger?.[stderrLogLevel]?.(text.trimEnd());
+        const trimmed = text.trimEnd();
+        if (stderrFilter && !stderrFilter(trimmed)) {
+          return;
+        }
+        logger?.[stderrLogLevel]?.(trimmed);
       });
     }
 

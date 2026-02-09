@@ -80,7 +80,8 @@ export async function runRawWslCommand(rawArgs, options = {}) {
     env,
     inheritStdio = false,
     shell = false,
-    stderrLogLevel = "debug"
+    stderrLogLevel = "debug",
+    stderrFilter = null
   } = options;
 
   const resolvedWsl = wslCommand || (await resolveWslCommand(logger));
@@ -90,7 +91,8 @@ export async function runRawWslCommand(rawArgs, options = {}) {
     env,
     inheritStdio,
     shell,
-    stderrLogLevel
+    stderrLogLevel,
+    stderrFilter
   });
 }
 

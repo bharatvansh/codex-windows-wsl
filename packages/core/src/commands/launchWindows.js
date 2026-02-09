@@ -9,6 +9,22 @@ import { runCommand } from "../utils/exec.js";
 import { findFirstByName } from "../utils/discovery.js";
 import { resolveLaunchSource } from "./resolveLaunchSource.js";
 
+function launchStderrFilter(line) {
+  if (!line) return false;
+  const ignored = [
+    "[electron-message-handler]",
+    "[electron-fetch-handler]",
+    "[git-repo-watcher]",
+    "[git-origin-and-roots]",
+    "[git]",
+    "[build-flavor]",
+    "Statsig:",
+    "Failed to register codex://",
+    "DeprecationWarning:"
+  ];
+  return !ignored.some((prefix) => line.includes(prefix));
+}
+
 async function resolveElectronExe(prepData, logger) {
   const nativeBuildDir = prepData?.paths?.nativeBuildDir;
   if (nativeBuildDir) {
@@ -103,7 +119,8 @@ export async function launchWindowsCommand(options = {}, injected = {}) {
     logger,
     inheritStdio: false,
     shell: false,
-    stderrLogLevel: "error"
+    stderrLogLevel: "error",
+    stderrFilter: launchStderrFilter
   });
 
   const launchManifest = {

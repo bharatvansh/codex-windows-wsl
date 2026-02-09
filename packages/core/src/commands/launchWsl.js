@@ -99,6 +99,25 @@ async function resolveWslCodexCliPath(runtime, options, logger, homeDir) {
   return resolved;
 }
 
+function launchStderrFilter(line) {
+  if (!line) return false;
+  const ignored = [
+    "[electron-message-handler]",
+    "[electron-fetch-handler]",
+    "[git-repo-watcher]",
+    "[git-origin-and-roots]",
+    "[git]",
+    "[build-flavor]",
+    "Statsig:",
+    "libnotify-WARNING",
+    "notify_notification_show",
+    "Failed to register codex://",
+    "DeprecationWarning:",
+    "org.freedesktop.systemd1"
+  ];
+  return !ignored.some((prefix) => line.includes(prefix));
+}
+
 export async function launchWslCommand(options = {}, injected = {}) {
   const config = injected.config || (await loadConfig(options));
   const runtime = injected.runtimeOptions;
@@ -192,7 +211,8 @@ export async function launchWslCommand(options = {}, injected = {}) {
     wslCommand: runtime.wslCommand,
     logger,
     inheritStdio: false,
-    stderrLogLevel: "error"
+    stderrLogLevel: "error",
+    stderrFilter: launchStderrFilter
   });
 
   const launchManifest = {
