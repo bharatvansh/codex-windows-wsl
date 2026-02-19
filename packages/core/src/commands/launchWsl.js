@@ -8,7 +8,8 @@ import {
   runWslShell,
   resolveWslHomeDir,
   expandWslHomePath,
-  shellEscape
+  shellEscape,
+  toWslPath
 } from "../runtime/wslExec.js";
 import { runWslPreflight, buildWslPreflightError } from "../runtime/wslPreflight.js";
 
@@ -84,19 +85,67 @@ async function resolveWslCodexCliPath(runtime, options, logger, homeDir) {
     return value;
   }
 
-  const whichResult = await runWslStep(
-    "resolve_codex_cli_path",
-    "command -v codex | grep -v '/mnt/c/' || which codex || true",
-    runtime,
-    logger
-  );
+  const resolutionSteps = [
+    {
+      name: "resolve_codex_cli_path",
+      script:
+        "candidate=\"$(command -v codex 2>/dev/null || true)\"; [ -n \"$candidate\" ] && [ -x \"$candidate\" ] && printf '%s' \"$candidate\" | grep -v '/mnt/c/' || true"
+    },
+    {
+      name: "resolve_codex_cli_path_bashrc",
+      script:
+        "if [ -f \"$HOME/.bashrc\" ]; then . \"$HOME/.bashrc\" >/dev/null 2>&1 || true; fi; candidate=\"$(command -v codex 2>/dev/null || true)\"; [ -n \"$candidate\" ] && [ -x \"$candidate\" ] && printf '%s' \"$candidate\" | grep -v '/mnt/c/' || true"
+    },
+    {
+      name: "resolve_codex_cli_path_npm_prefix",
+      script:
+        "npm_prefix=\"$(npm config get prefix 2>/dev/null || true)\"; [ -n \"$npm_prefix\" ] && [ -x \"$npm_prefix/bin/codex\" ] && printf '%s' \"$npm_prefix/bin/codex\" | grep -v '/mnt/c/' || true"
+    },
+    {
+      name: "resolve_codex_cli_path_npm_root",
+      script:
+        "npm_root=\"$(npm root -g 2>/dev/null || true)\"; npm_bin=\"$(dirname \"$npm_root\")/bin/codex\"; [ -n \"$npm_root\" ] && [ -x \"$npm_bin\" ] && printf '%s' \"$npm_bin\" | grep -v '/mnt/c/' || true"
+    },
+    {
+      name: "resolve_codex_cli_path_user_shell",
+      script:
+        "user_shell=\"$(getent passwd \"$(id -un)\" | cut -d: -f7)\"; if [ -n \"$user_shell\" ] && [ -x \"$user_shell\" ]; then \"$user_shell\" -ic 'candidate=\"$(command -v codex 2>/dev/null || true)\"; [ -n \"$candidate\" ] && [ -x \"$candidate\" ] && printf \"%s\" \"$candidate\" || true' 2>/dev/null | grep -v '/mnt/c/' || true; fi"
+    },
+    {
+      name: "resolve_codex_cli_path_mnt_fallback",
+      script:
+        "candidate=\"$(command -v codex 2>/dev/null || true)\"; [ -n \"$candidate\" ] && [ -x \"$candidate\" ] && printf '%s' \"$candidate\" || true"
+    }
+  ];
 
-  const resolved = whichResult.stdout.trim();
-  if (!resolved) {
-    throw new Error("Unable to resolve Codex CLI in WSL. Install with npm i -g @openai/codex.");
+  const hostAppData = process.env.APPDATA;
+  if (hostAppData) {
+    const hostNpmCodexShim = toWslPath(path.join(hostAppData, "npm", "codex"));
+    resolutionSteps.push({
+      name: "resolve_codex_cli_path_host_npm_shim",
+      script:
+        `[ -x ${shellEscape(hostNpmCodexShim)} ] && printf '%s' ${shellEscape(hostNpmCodexShim)} || true`
+    });
   }
 
-  return resolved;
+  for (const step of resolutionSteps) {
+    const result = await runWslStep(step.name, step.script, runtime, logger);
+    const resolved = result.stdout
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find(Boolean);
+
+    if (resolved) {
+      if (resolved.startsWith("/mnt/c/")) {
+        await logger.warn("Resolved Codex CLI from Windows-mounted path in WSL", {
+          codexCliPath: resolved
+        });
+      }
+      return resolved;
+    }
+  }
+
+  throw new Error("Unable to resolve Codex CLI in WSL. Install with npm i -g @openai/codex.");
 }
 
 function launchStderrFilter(line) {
