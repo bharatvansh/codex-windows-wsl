@@ -118,6 +118,7 @@ export async function launchWindowsCommand(options = {}, injected = {}) {
     env,
     logger,
     inheritStdio: false,
+    stdio: "ignore",
     shell: false,
     stderrLogLevel: "error",
     stderrFilter: launchStderrFilter

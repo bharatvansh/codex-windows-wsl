@@ -4,6 +4,7 @@ import {
   launchCommand,
   runCommandWithPrepare,
   cleanCommand,
+  killCommand,
   loadConfig,
   readLatestManifest
 } from "@codex-win/core";
@@ -22,6 +23,7 @@ Commands:
   launch [--prepare-manifest <p>] Launch from latest or explicit prepare manifest
   run [--dmg <path>]              Run prepare then launch
   clean [--cache-only]            Remove work artifacts
+  kill [--runtime <windows|wsl>]  Kill stuck app processes
   report --out <path>             Build support report JSON/ZIP
 
 Common options:
@@ -118,6 +120,12 @@ export async function main(argv) {
 
   if (command === "clean") {
     const result = await cleanCommand(options);
+    printResult(result);
+    return;
+  }
+
+  if (command === "kill") {
+    const result = await killCommand(options);
     printResult(result);
     return;
   }

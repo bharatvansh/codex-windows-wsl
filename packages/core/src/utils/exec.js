@@ -6,23 +6,26 @@ export function runCommand(command, args = [], options = {}) {
     env,
     logger,
     inheritStdio = false,
+    stdio,
     shell = false,
     stderrLogLevel = "debug",
     stderrFilter = null
   } = options;
+
+  const resolvedStdio = stdio || (inheritStdio ? "inherit" : "pipe");
 
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd,
       env,
       shell,
-      stdio: inheritStdio ? "inherit" : "pipe"
+      stdio: resolvedStdio
     });
 
     let stdout = "";
     let stderr = "";
 
-    if (!inheritStdio) {
+    if (resolvedStdio === "pipe") {
       child.stdout?.on("data", (chunk) => {
         const text = chunk.toString();
         stdout += text;

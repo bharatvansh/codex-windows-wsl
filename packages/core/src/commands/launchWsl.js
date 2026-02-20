@@ -242,7 +242,7 @@ export async function launchWslCommand(options = {}, injected = {}) {
   });
 
   const launchScript = [
-    "set -euo pipefail",
+    "set -e",
     `cd ${shellEscape(appDir)}`,
     `export ELECTRON_RENDERER_URL=${shellEscape(rendererUrl)}`,
     "export ELECTRON_FORCE_IS_PACKAGED=1",
@@ -252,7 +252,11 @@ export async function launchWslCommand(options = {}, injected = {}) {
     "export NODE_ENV=production",
     `export CODEX_CLI_PATH=${shellEscape(codexCliPath)}`,
     `export PWD=${shellEscape(appDir)}`,
-    `exec ${shellEscape(electronExe)} ${shellEscape(appDir)} --user-data-dir=${shellEscape(userDataDir)} --disk-cache-dir=${shellEscape(cacheDir)}`
+    `${shellEscape(electronExe)} ${shellEscape(appDir)} --user-data-dir=${shellEscape(userDataDir)} --disk-cache-dir=${shellEscape(cacheDir)} </dev/null >/dev/null 2>&1 &`,
+    "electron_pid=$!",
+    "echo \"Electron launched with PID: $electron_pid\"",
+    "trap 'kill \"$electron_pid\" >/dev/null 2>&1 || true' HUP INT TERM",
+    "wait $electron_pid"
   ].join("\n");
 
   const launchResult = await runWslShell(launchScript, {
